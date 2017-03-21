@@ -706,4 +706,18 @@ public unsafe class CSharpTests : GeneratorTestFixture
         Assert.IsNotNull(incompleteStruct);
         Assert.DoesNotThrow(() => CSharp.CSharp.UseIncompleteStruct(incompleteStruct));
     }
+
+    public class FreeHGlobalTest : Bar
+    {
+        public FreeHGlobalTest()
+        {
+        }
+    }
+
+    [Test]
+    public void TestFreeHGlobalCalled()
+    {
+       var v1 = new FreeHGlobalTest();
+       var v2 = new FreeHGlobalTest();
+    }
 }
