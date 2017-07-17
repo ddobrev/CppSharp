@@ -341,8 +341,16 @@ namespace CppSharp.Generators.CSharp
             TypeMap typeMap;
             if (!TypeMapDatabase.FindTypeMap(template, out typeMap))
             {
-                if (ContextKind == TypePrinterContextKind.Managed &&
-                    decl == template.Template.TemplatedDecl)
+                if (ContextKind == TypePrinterContextKind.Managed
+                    && decl == template.Template.TemplatedDecl
+                    // HACK: TemplateParameterType.Parameter is null in some corner cases, see the parser
+                    && template.Arguments.All(a =>
+                        {
+                            if (a.Type.Type == null)
+                                return true;
+                            var templateParam = a.Type.Type.Desugar() as TemplateParameterType;
+                            return templateParam == null || templateParam.Parameter != null;
+                        }))
                     return $@"{decl.Visit(this)}<{string.Join(", ",
                         template.Arguments.Select(VisitTemplateArgument))}>";
                 return decl.Visit(this);
@@ -395,7 +403,9 @@ namespace CppSharp.Generators.CSharp
         public override TypePrinterResult VisitInjectedClassNameType(
             InjectedClassNameType injected, TypeQualifiers quals)
         {
-            return injected.Class.Visit(this);
+            return injected.InjectedSpecializationType.Type != null ?
+                injected.InjectedSpecializationType.Visit(this) :
+                injected.Class.Visit(this);
         }
 
         public override TypePrinterResult VisitDependentNameType(DependentNameType dependent,
