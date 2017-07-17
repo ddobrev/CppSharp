@@ -938,26 +938,40 @@ namespace CppSharp.Generators.CSharp
             function.Type.IsPointerTo(out type);
             PrimitiveType primitiveType;
             var internalFunction = GetFunctionNativeIdentifier(function);
-            var @internal = $@"{Helpers.InternalStruct}{
-                Helpers.GetSuffixForInternal(function.Namespace)}";
+            TypePrinter.PushContext(TypePrinterContextKind.Native);
+            var @internal = function.Namespace.Visit(TypePrinter);
+            TypePrinter.PopContext();
+            var ctx = new CSharpMarshalContext(Context)
+            {
+                Parameter = new Parameter
+                {
+                    Name = "value",
+                    QualifiedType = new QualifiedType(type)
+                },
+                ReturnType = new QualifiedType(type)
+            };
+            var marshal = new CSharpMarshalManagedToNativePrinter(ctx);
+            type.CSharpMarshalToNative(marshal);
+            Write(marshal.Context.Before);
             if (type.IsPrimitiveType(out primitiveType))
             {
                 WriteLine($@"*{@internal}.{internalFunction}({
-                    GetInstanceParam(function)}, {function.Parameters[0].Name}) = value;");
+                    GetInstanceParam(function)}, {function.Parameters[0].Name}) = {
+                    marshal.Context.Return};");
             }
             else
             {
-                var typeString = type.ToString();
+                TypePrinter.PushContext(TypePrinterContextKind.Native);
+                var typeInternal = type.Visit(TypePrinter);
+                TypePrinter.PopContext();
                 Class @class;
                 var isValueType = (type.GetFinalPointee() ?? type).TryGetClass(out @class) &&
                     @class.IsValueType;
                 var paramMarshal = GenerateFunctionParamMarshal(
                     function.Parameters[0], 0, function);
-                WriteLine($@"*({typeString}.{@internal}*) {@internal}.{internalFunction}({
+                WriteLine($@"*({typeInternal}*) {@internal}.{internalFunction}({
                     GetInstanceParam(function)}, {(paramMarshal.Context == null ?
-                    paramMarshal.Name : paramMarshal.Context.Return)}) = {
-                    (isValueType ? string.Empty : $@"*({typeString}.{@internal}*) ")}value.{
-                    Helpers.InstanceIdentifier};");
+                    paramMarshal.Name : paramMarshal.Context.Return)}) = {marshal.Context.Return};");
             }
         }
 
@@ -2775,7 +2789,15 @@ namespace CppSharp.Generators.CSharp
                 if (retType.Type.IsAddress() &&
                     retType.Type.GetPointee().Equals(returnType) &&
                     returnType.IsPrimitiveType())
-                    WriteLine("return *{0};", marshal.Context.Return);
+                {
+                    var substitute = returnType as TemplateParameterSubstitutionType;
+                    if (substitute != null)
+                        WriteLine($@"return ({
+                            substitute.ReplacedParameter.Parameter.Name}) (object) *{
+                            marshal.Context.Return};");
+                    else
+                        WriteLine("return *{0};", marshal.Context.Return);
+                }
                 else
                     WriteLine("return {0};", marshal.Context.Return);
 
