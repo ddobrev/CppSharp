@@ -2420,14 +2420,15 @@ namespace CppSharp.Generators.CSharp
                 NewLine();
                 WriteLine("public override bool Equals(object obj)");
                 WriteStartBraceIndent();
+                var printedClass = @class.Visit(TypePrinter);
                 if (@class.IsRefType)
                 {
-                    WriteLine("return this == obj as {0};", @class.Name);
+                    WriteLine($"return this == obj as {printedClass}{printedClass.NameSuffix};");
                 }
                 else
                 {
-                    WriteLine("if (!(obj is {0})) return false;", @class.Name);
-                    WriteLine("return this == ({0}) obj;", @class.Name);
+                    WriteLine($"if (!(obj is {printedClass}{printedClass.NameSuffix})) return false;");
+                    WriteLine($"return this == ({printedClass}{printedClass.NameSuffix}) obj;");
                 }
                 WriteCloseBraceIndent();
 
@@ -2436,20 +2437,21 @@ namespace CppSharp.Generators.CSharp
                 WriteLine("public override int GetHashCode()");
                 WriteStartBraceIndent();
                 if (@class.IsRefType)
-                {
-                    WriteLine("if ({0} == global::System.IntPtr.Zero)", Helpers.InstanceIdentifier);
-                    WriteLineIndent("return global::System.IntPtr.Zero.GetHashCode();");
-                    TypePrinter.PushContext(TypePrinterContextKind.Native);
-                    WriteLine($@"return (*({@class.Visit(TypePrinter)}*) {
-                        Helpers.InstanceIdentifier}).GetHashCode();");
-                    TypePrinter.PopContext();
-                }
+                    this.GenerateMember(@class, GenerateGetHashCode);
                 else
-                {
-                    WriteLine("return {0}.GetHashCode();", Helpers.InstanceIdentifier);
-                }
+                    WriteLine($"return {Helpers.InstanceIdentifier}.GetHashCode();");
                 WriteCloseBraceIndent();
             }
+        }
+
+        private void GenerateGetHashCode(Class @class)
+        {
+            WriteLine($"if ({Helpers.InstanceIdentifier} == global::System.IntPtr.Zero)");
+            WriteLineIndent("return global::System.IntPtr.Zero.GetHashCode();");
+            TypePrinter.PushContext(TypePrinterContextKind.Native);
+            WriteLine($@"return (*({@class.Visit(TypePrinter)}*) {
+                Helpers.InstanceIdentifier}).GetHashCode();");
+            TypePrinter.PopContext();
         }
 
         private void GenerateVirtualPropertyCall(Method method, Class @class,
