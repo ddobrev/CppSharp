@@ -3001,6 +3001,9 @@ void Parser::CompleteIfSpecializationType(const clang::QualType& QualType)
 
     c->getSema().getDiagnostics().setClient(existingClient, false);
 
+    if (!CTS->isCompleteDefinition())
+        return;
+
     auto CT = WalkClassTemplate(CTS->getSpecializedTemplate());
     auto USR = GetDeclUSR(CTS);
     auto TS = CT->FindSpecialization(USR);
