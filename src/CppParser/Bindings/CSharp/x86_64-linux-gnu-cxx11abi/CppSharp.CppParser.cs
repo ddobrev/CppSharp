@@ -48211,7 +48211,7 @@ namespace CppSharp
 
         public unsafe partial class ParserResult : IDisposable
         {
-            [StructLayout(LayoutKind.Explicit, Size = 56)]
+            [StructLayout(LayoutKind.Explicit, Size = 48)]
             public partial struct __Internal
             {
                 [FieldOffset(0)]
@@ -48225,9 +48225,6 @@ namespace CppSharp
 
                 [FieldOffset(40)]
                 internal global::System.IntPtr targetInfo;
-
-                [FieldOffset(48)]
-                internal global::System.IntPtr codeParser;
 
                 [SuppressUnmanagedCodeSecurity]
                 [DllImport("CppSharp.CppParser", CallingConvention = global::System.Runtime.InteropServices.CallingConvention.Cdecl,
@@ -48409,24 +48406,6 @@ namespace CppSharp
                 }
             }
 
-            public global::CppSharp.Parser.Parser CodeParser
-            {
-                get
-                {
-                    global::CppSharp.Parser.Parser __result0;
-                    if (((global::CppSharp.Parser.ParserResult.__Internal*) __Instance)->codeParser == IntPtr.Zero) __result0 = null;
-                    else if (global::CppSharp.Parser.Parser.NativeToManagedMap.ContainsKey(((global::CppSharp.Parser.ParserResult.__Internal*) __Instance)->codeParser))
-                        __result0 = (global::CppSharp.Parser.Parser) global::CppSharp.Parser.Parser.NativeToManagedMap[((global::CppSharp.Parser.ParserResult.__Internal*) __Instance)->codeParser];
-                    else __result0 = global::CppSharp.Parser.Parser.__CreateInstance(((global::CppSharp.Parser.ParserResult.__Internal*) __Instance)->codeParser);
-                    return __result0;
-                }
-
-                set
-                {
-                    ((global::CppSharp.Parser.ParserResult.__Internal*)__Instance)->codeParser = ReferenceEquals(value, null) ? global::System.IntPtr.Zero : value.__Instance;
-                }
-            }
-
             public uint DiagnosticsCount
             {
                 get
@@ -48449,8 +48428,8 @@ namespace CppSharp
 
                 [SuppressUnmanagedCodeSecurity]
                 [DllImport("CppSharp.CppParser", CallingConvention = global::System.Runtime.InteropServices.CallingConvention.Cdecl,
-                    EntryPoint="_ZN8CppSharp9CppParser11ClangParser11ParseHeaderEPNS0_16CppParserOptionsE")]
-                internal static extern global::System.IntPtr ParseHeader(global::System.IntPtr Opts);
+                    EntryPoint="_ZN8CppSharp9CppParser11ClangParser12ParseHeadersEPNS0_16CppParserOptionsE")]
+                internal static extern global::System.IntPtr ParseHeaders(global::System.IntPtr Opts);
 
                 [SuppressUnmanagedCodeSecurity]
                 [DllImport("CppSharp.CppParser", CallingConvention = global::System.Runtime.InteropServices.CallingConvention.Cdecl,
@@ -48527,10 +48506,10 @@ namespace CppSharp
                 __Instance = IntPtr.Zero;
             }
 
-            public static global::CppSharp.Parser.ParserResult ParseHeader(global::CppSharp.Parser.CppParserOptions Opts)
+            public static global::CppSharp.Parser.ParserResult ParseHeaders(global::CppSharp.Parser.CppParserOptions Opts)
             {
                 var __arg0 = ReferenceEquals(Opts, null) ? global::System.IntPtr.Zero : Opts.__Instance;
-                var __ret = __Internal.ParseHeader(__arg0);
+                var __ret = __Internal.ParseHeaders(__arg0);
                 global::CppSharp.Parser.ParserResult __result0;
                 if (__ret == IntPtr.Zero) __result0 = null;
                 else if (global::CppSharp.Parser.ParserResult.NativeToManagedMap.ContainsKey(__ret))

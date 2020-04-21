@@ -3295,7 +3295,7 @@ void Parser::WalkFunction(const clang::FunctionDecl* FD, Function* F,
         return;
     }
 
-    auto& CGInfo = GetCodeGenFunctionInfo(codeGenTypes, FD);
+    auto& CGInfo = GetCodeGenFunctionInfo(codeGenTypes.get(), FD);
     F->isReturnIndirect = CGInfo.getReturnInfo().isIndirect() ||
         CGInfo.getReturnInfo().isInAlloca();
 
@@ -4176,9 +4176,7 @@ void Parser::SetupLLVMCodegen()
         c->getHeaderSearchOpts(), c->getPreprocessorOpts(),
         c->getCodeGenOpts(), *LLVMModule, c->getDiagnostics()));
 
-    CGT.reset(new clang::CodeGen::CodeGenTypes(*CGM.get()));
-
-    codeGenTypes = CGT.get();
+    codeGenTypes.reset(new clang::CodeGen::CodeGenTypes(*CGM.get()));
 }
 
 bool Parser::SetupSourceFiles(const std::vector<std::string>& SourceFiles,
@@ -4244,7 +4242,7 @@ void SemaConsumer::HandleTranslationUnit(clang::ASTContext& Ctx)
     Parser.WalkAST(TU);
 }
 
-ParserResult* Parser::ParseHeader(const std::vector<std::string>& SourceFiles)
+ParserResult* Parser::ParseHeaders(const std::vector<std::string>& SourceFiles)
 {
     assert(opts->ASTContext && "Expected a valid ASTContext");
 
@@ -4505,14 +4503,33 @@ ParserResult* Parser::ParseLibrary(const std::string& File)
     return res;
 }
 
-ParserResult* ClangParser::ParseHeader(CppParserOptions* Opts)
+ParserResult* ClangParser::ParseHeaders(CppParserOptions* Opts)
 {
     if (!Opts)
         return nullptr;
 
-    auto res = new ParserResult();
-    res->codeParser = new Parser(Opts);
-    return res->codeParser->ParseHeader(Opts->SourceFiles);
+    auto& Headers = Opts->SourceFiles;
+    if (Opts->unityBuild)
+    {
+        Parser parser(Opts);
+        return parser.ParseHeaders(Headers);
+    }
+
+    ParserResult* res = 0;
+    std::vector<Parser*> parsers;
+    for (size_t i = 0; i < Headers.size(); i++)
+    {
+        auto parser = new Parser(Opts);
+        parsers.push_back(parser);
+        std::vector<std::string> Header(&Headers[i], &Headers[i + 1]);
+        if (i < Headers.size() - 1)
+            delete parser->ParseHeaders(Header);
+        else
+            res = parser->ParseHeaders(Header);
+    }
+    for (auto parser : parsers)
+        delete parser;
+    return res;
 }
 
 ParserResult* ClangParser::ParseLibrary(CppParserOptions* Opts)

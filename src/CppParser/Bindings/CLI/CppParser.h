@@ -429,7 +429,7 @@ namespace CppSharp
 
             ~ClangParser();
 
-            static CppSharp::Parser::ParserResult^ ParseHeader(CppSharp::Parser::CppParserOptions^ Opts);
+            static CppSharp::Parser::ParserResult^ ParseHeaders(CppSharp::Parser::CppParserOptions^ Opts);
 
             static CppSharp::Parser::ParserResult^ ParseLibrary(CppSharp::Parser::CppParserOptions^ Opts);
 

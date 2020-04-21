@@ -96,7 +96,6 @@ struct CS_API ParserResult
 
     NativeLibrary* library;
     ParserTargetInfo* targetInfo;
-    Parser* codeParser;
 };
 
 enum class SourceLocationKind
@@ -112,7 +111,7 @@ class CS_API ClangParser
 {
 public:
 
-    static ParserResult* ParseHeader(CppParserOptions* Opts);
+    static ParserResult* ParseHeaders(CppParserOptions* Opts);
     static ParserResult* ParseLibrary(CppParserOptions* Opts);
 };
 

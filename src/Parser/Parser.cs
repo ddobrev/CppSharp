@@ -53,7 +53,7 @@ namespace CppSharp
             foreach (var file in files)
                 options.AddSourceFiles(file);
 
-            var result = Parser.ClangParser.ParseHeader(options);
+            var result = Parser.ClangParser.ParseHeaders(options);
             SourcesParsed(files, result);
 
             return result;
