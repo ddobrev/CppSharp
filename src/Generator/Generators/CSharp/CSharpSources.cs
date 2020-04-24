@@ -2186,7 +2186,7 @@ namespace CppSharp.Generators.CSharp
 
             var hasBaseClass = @class.HasBaseClass && @class.BaseClass.IsRefType;
             if (hasBaseClass)
-                WriteLineIndent(": base((void*) null)", @class.BaseClass.Visit(TypePrinter));
+                WriteLineIndent(": base((void*) native)", @class.BaseClass.Visit(TypePrinter));
 
             WriteOpenBraceAndIndent();
 
@@ -2200,8 +2200,8 @@ namespace CppSharp.Generators.CSharp
                     WriteLine("if (native == null)");
                     WriteLineIndent("return;");
                 }
-
-                WriteLine("{0} = new global::System.IntPtr(native);", Helpers.InstanceIdentifier);
+                if (!hasBaseClass)
+                    WriteLine("{0} = new global::System.IntPtr(native);", Helpers.InstanceIdentifier);
                 var dtor = @class.Destructors.FirstOrDefault();
                 var hasVTables = @class.IsDynamic && GetUniqueVTableMethodEntries(@class).Count > 0;
                 var setupVTables = !@class.IsAbstractImpl && hasVTables && dtor?.IsVirtual == true;
@@ -2223,7 +2223,7 @@ namespace CppSharp.Generators.CSharp
                     Unindent();
                 }
             }
-            else
+            else if (!hasBaseClass)
             {
                 WriteLine($"{Helpers.InstanceField} = *({TypePrinter.PrintNative(@class)}*) native;");
             }
